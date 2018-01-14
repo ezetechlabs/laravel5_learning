@@ -42,3 +42,34 @@ Route::get('storage/{filename}', function($filename){
 
 
 });
+
+Route::get('download-pdf/{filename}', function($filename){
+    $path = storage_path('app/public/' . $filename);
+    if ( !File::exists($path) ) {
+        abort(404);
+    }
+    $headers= [
+        'Content-Type' => 'application/pdf',
+    ];
+    //$file = File::get($path);
+    $filenameNoExtension = pathinfo($path, PATHINFO_FILENAME);
+    $filenameExtension = pathinfo($path, PATHINFO_EXTENSION);
+    //dd($filenameNoExtension);
+    return response()->download($path, $filenameNoExtension . '-' . date("Y-m-d") . '.' . $filenameExtension, $headers);
+    //return Response::download($path, $filenameNoExtension . '-' . date("Y-m-d"), $headers);
+});
+
+Route::get('thumbnail/{filename}', function($filename){
+    $path = storage_path($filename);
+    if ( !File::exists($path) ) {
+        abort(404);
+    }
+    $img = Image::make($path);
+    $savePath = public_path() . '/thumnails/' . '100x100-' . $filename;
+    $img->resize(100, 100, function ($constraint) {
+        $constraint->aspectRatio();
+    })->save($savePath);
+
+    return Image::make($savePath)->response();
+
+});
